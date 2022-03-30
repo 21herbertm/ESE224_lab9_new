@@ -1,51 +1,51 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-Created on Tue Mar 16 16:02:18 2021
+# MELANIE HERBERT
+# ESE 224 LAB 9
 
-@author: zhiyangwang
-"""
+# QUESTION 1.3
 
 import numpy as np
 import matplotlib.image as mpimg 
 import matplotlib.pyplot as plt
 from scipy.fft import dct, idct
 
+
+# BELOW CODE AQUIRES THE PIECES NEEDED TO COMPUTE THE DCT IN 2-D
+# GOAL: INPUT 2-D SIGNAL OF SIZE N SQUARED
+# OUTPUT: 2D DCT
+
+# INPUTS TIME DOMAIN SIGNAL X
 class DCT_2D():
-    """
-    2-D DCT
-    """
     def __init__(self, x):
-        """
-        input time-domain signal x
-        """
         self.x = x
         self.M = np.shape(x)[0]
         self.N = np.shape(x)[1]
-    
+
+    # ALTERNATIVE METHOD OF COMPUTING THE DCT OF SIGNAL X BY USING THE BUILD-IN DCT FUNCTION.
+    # COMES IN USE FOR WHEN THE SIGNAL DIMENSION IS VERY LARGE AND IT TAKES A LONG TIME TO COMPUTE THE NESTED
+    # FOR LOOP STRUCTURE
     def solve2(self):
-        """
-        \\\\\ METHOD: Compute DCT of x with built-in function
-        """
         return dct(dct(self.x.T, norm='ortho').T, norm='ortho')
     
-
+# QUESTION 1.4
 class iDCT_2D():
-    """
-    2-D iDCT
-    """
-    
     def __init__(self, X):
         self.X = X
     
-    def solve2(self):
-        """
-        \\\\\ METHOD: Compute iDCT of X with built-in function
-        """
+    def solve2(self): # COMPUTES THE IDCT OF X USING THE BUILT IN FUNCTION
         return idct(idct(self.X.T, norm='ortho').T, norm='ortho')
 
+
+## TABLE GIVEN FROM QUESTION 1.3
+
+##### QUESTION 1.3 QUANTIZATION
+# Write a function that executes the above procedure (implementing a basic version of the JPEG compression scheme).
+# If your code is running too slowly, try using Python's built-in functions.
+# 1)Extract an 8x8 block of the image. Recall that our image signal corresponds to an  matrix. That is what we would obtain after importing an image.
+# Creating the blocks or patches, we can think of each block as a ’submatrix’
+# 2) Compute the DCT of each block. Then store that resulting signal in X.
+# 3) Now we should have access to the frequency components of the signal. Then we quantize the DCT coefficients (given the equation in the packet).
 def quantization_table(quality):
-    Q50 = [ [16, 11, 10, 16, 24, 40, 51, 61],
+    matrix_Q_L = [ [16, 11, 10, 16, 24, 40, 51, 61],
            [12, 12, 14, 19, 26, 58, 60, 55],
     [ 14, 13, 16, 24, 40, 57, 69, 56],
     [ 14, 17, 22, 29, 51, 87, 80, 62],
@@ -54,32 +54,31 @@ def quantization_table(quality):
      [49, 64, 78, 87, 103, 121, 120, 101],
      [72, 92, 95, 98, 112, 100, 103, 99]]
     
-    QX = np.zeros((8, 8))
+    block_matrix = np.zeros((8, 8))
     if quality > 50:
-        QX =( Q50 * (np.ones((8,8)) * ( ( 100 - quality ) / 50 ) )).round().astype(np.int32) 
+        block_matrix =( matrix_Q_L * (np.ones((8,8)) * ( ( 100 - quality ) / 50 ) )).round().astype(np.int32)
     else:
-        QX = (Q50 *( np.ones((8,8)) * ( 50 / quality))).round().astype(np.int32)
+        block_matrix = (matrix_Q_L *( np.ones((8,8)) * ( 50 / quality))).round().astype(np.int32)
          
-    return QX
+    return block_matrix
 
 
-
-def quantize(QX, block):
+def quantize(block_matrix, block):
        
-    return (block /QX).round().astype(np.int32)
+    return (block /block_matrix).round().astype(np.int32)
 
-
-
-def dequantize(QX, block):
+def dequantize(block_matrix, block):
          
-    return (( block) * QX).astype(np.int32)
-    
+    return (( block) * block_matrix).astype(np.int32)
 
 
+##### QUESTION 1.3 QUANTIZATION
 
-
-
-def q13(quantization):
+# 1)Extract an 8x8 block of the image. Recall that our image signal corresponds to an  matrix. That is what we would obtain after importing an image.
+# Creating the blocks or patches, we can think of each block as a ’submatrix’
+# 2) Compute the DCT of each block. Then store that resulting signal in X.
+# 3) Now we should have access to the frequency components of the signal. Then we quantize the DCT coefficients (given the equation in the packet).
+def JPEG_question_1_3(quantization):
     img = mpimg.imread('imgB_prenoise.png')  
     plt.imshow(img, cmap='gray')
     plt.colorbar()
@@ -96,8 +95,10 @@ def q13(quantization):
             
     return X_quantized
 
+###########################
+### QUESTION 1.4 PART 2
 
-def q14_2(quantization, X_quan):
+def quantization_question_1_4_partb(quantization, X_quan):
     N = X_quan.shape[0]
     x_dequantized = np.zeros([N, N], dtype=np.complex)
     for i in np.arange(0, N-7, 8):
@@ -111,49 +112,56 @@ def q14_2(quantization, X_quan):
     x_dequantized /= energy_rec
             
     return x_dequantized
-    
-###############################################################################
-################################## M A I N ####################################
-###############################################################################
 
-if __name__ == '__main__': 
-    # JPEG with the given quantization matrix
+if __name__ == '__main__':
     img = mpimg.imread('imgB_prenoise.png')  
 
+    # QUANTIZED PLOTS
     quan_tab = quantization_table(50)            
-    X = q13(quan_tab)
-    x = q14_2(quan_tab, X) 
+    X = JPEG_question_1_3(quan_tab)
+    x = def quantization_question_1_4_partb(quantization, X_quan):(quan_tab, X)
     plt.imshow(abs(x), cmap='gray')
     plt.title('Reconstructed image with standard quantization matrix')
     plt.savefig('Recons_jpeg.png')
     print(np.linalg.norm(img - abs(x), 2))
     plt.colorbar()
     plt.show()    
-    
-    # Compress and reconstruct with a lower value quantization matrix
+
+"""
+Looking at the reconstructed image with varying values for the quantization matrix (see above three images, 
+one with a high value quantization matrix, lower value, and then a standard value). We can see that the quantization 
+matrix with a lower value correlates to improved reconstruction rather then the standard quantization matrix. 
+Reconstruction will become worse as it eliminates more frequency components and this is shown with the higher value 
+for a quantization matrix giving worse reconstruction.
+
+"""
+    # 1.3 TO COMPRESS AND RECONSTRUCT WITH A LOWER VALUE QUANTIZATION MATRIX
     quan_tab = quantization_table(95)      
     print(quan_tab)      
-    X = q13(quan_tab)
-    x = q14_2(quan_tab, X) 
+    X = JPEG_question_1_3(quan_tab)
+    x = def quantization_question_1_4_partb(quantization, X_quan):(quan_tab, X)
     plt.imshow(abs(x), cmap='gray')
     print(np.linalg.norm(img - abs(x), 2))
 
-    plt.title('Reconstructed image with lower value quantization matrix')
+    plt.title('Reconstructed image with LOWER value quantization matrix')
     plt.savefig('Reconslow_jpeg.png')
 
     plt.colorbar()
     plt.show()  
-    
-    # Compress and reconstruct with a higher value quantization matrix
+
     quan_tab = quantization_table(2)   
     print(quan_tab)      
-         
-    X = q13(quan_tab)
-    x = q14_2(quan_tab, X) 
+
+    # Reconstruction will become worse as it eliminates more frequency components and this is shown with the higher value
+    # for a quantization matrix giving worse reconstruction.
+
+    # 1.4 TO COMPRESS AND RECONSTRUCT WITH A HIGHER VALUE QUANTIZATION MATRIX
+    X = JPEG_question_1_3(quan_tab)
+    x = def quantization_question_1_4_partb(quantization, X_quan):(quan_tab, X)
     plt.imshow(abs(x), cmap='gray')
     print(np.linalg.norm(img - abs(x), 2))
 
-    plt.title('Reconstructed image with higher value quantization matrix')
+    plt.title('Reconstructed image with HIGHER value quantization matrix')
     plt.savefig('Reconshigh_jpeg.png')
 
     plt.colorbar()
